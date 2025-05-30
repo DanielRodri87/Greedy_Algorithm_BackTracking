@@ -1,6 +1,8 @@
 import random
 import networkx as nx
 import matplotlib.pyplot as plt
+import time
+import tracemalloc
 
 # Lista de cores disponíveis para os vértices
 colors = ["red", "green", "blue", "yellow", "purple", "orange", "pink", "brown", "gray", "cyan"]
@@ -246,5 +248,45 @@ def main():
     # Plota a MST
     plot_mst(mst, vertex_colors, num_vertices)
 
+
+def executar_experimentos():
+    """Executa experimentos do algoritmo guloso"""
+    tamanhos_grafos = [5, 8, 10, 12, 15]
+    resultados = []
+    
+    print("\n🚀 Iniciando experimentos de coloração de grafos (Guloso)...")
+    print("| Vértices | Tempo (ms) | Memória (KB) |")
+    print("|----------|------------|--------------|")
+    
+    for num_vertices in tamanhos_grafos:
+        inicio_tempo = time.perf_counter()
+        tracemalloc.start()
+        
+        graph = Graph()
+        graph.generate_graph(num_vertices, 0.4)
+        
+        # CORREÇÃO: Usar o grafo original (não a MST)
+        adj_list = graph.get_adjacency_list()
+        # Remover pesos das arestas
+        adj_list_unweighted = {
+            v: [neighbor for neighbor, _ in neighbors] 
+            for v, neighbors in adj_list.items()
+        }
+        vertex_colors = greedy_coloring(adj_list_unweighted, colors)
+        
+        memoria = tracemalloc.get_traced_memory()[1]
+        tracemalloc.stop()
+        tempo = (time.perf_counter() - inicio_tempo) * 1000
+        
+        resultados.append((num_vertices, tempo, memoria))
+        print(f"| {num_vertices:8d} | {tempo:9.2f} | {memoria/1024:11.2f} |")
+    
+    return resultados
+
+
 if __name__ == "__main__":
-    main()
+    from src.results import salvar_resultados
+    import tracemalloc
+    
+    resultados_guloso = executar_experimentos()
+    print("\n✅ Experimentos do algoritmo guloso concluídos!")
