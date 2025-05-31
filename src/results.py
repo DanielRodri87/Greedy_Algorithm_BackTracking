@@ -1,6 +1,10 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import networkx as nx
+import random
+from .backtracking import backtracking_coloring
+from .guloso import greedy_coloring, colors
 
 # Configuração de estilo para gráficos modernos
 sns.set_theme(style="whitegrid", palette="pastel")
@@ -50,6 +54,32 @@ def plotar_comparativo_memoria(vertices, mem_backtracking, mem_guloso, caminho):
     plt.savefig(caminho, bbox_inches='tight', dpi=120)
     plt.close()
 
+def plotar_exemplo_grafo(G, colors, titulo, caminho):
+    """Plota um exemplo de grafo colorido"""
+    plt.figure(figsize=(10, 8))
+    pos = nx.spring_layout(G, seed=42)
+    
+    nx.draw_networkx_nodes(G, pos, node_color=colors, node_size=500)
+    nx.draw_networkx_edges(G, pos, alpha=0.5)
+    nx.draw_networkx_labels(G, pos)
+    
+    plt.title(titulo, fontsize=16, pad=20)
+    plt.axis('off')
+    plt.savefig(caminho, bbox_inches='tight', dpi=120)
+    plt.close()
+
+def gerar_grafo_exemplo(num_vertices=8, densidade=0.4):
+    """Gera um grafo de exemplo para visualização"""
+    G = nx.Graph()
+    G.add_nodes_from(range(num_vertices))
+    
+    for i in range(num_vertices):
+        for j in range(i + 1, num_vertices):
+            if random.random() < densidade:
+                G.add_edge(i, j)
+    
+    return G
+
 def salvar_resultados(resultados_backtracking, resultados_guloso):
     """Salva e plota os resultados comparativos"""
     pasta_resultados = 'results'
@@ -57,6 +87,27 @@ def salvar_resultados(resultados_backtracking, resultados_guloso):
     
     print("\n📊 Gerando gráficos comparativos...")
     
+    # Gerar exemplos visuais
+    print("Gerando exemplos visuais dos algoritmos...")
+    G = gerar_grafo_exemplo()
+    
+    # Converter grafo para formato adequado
+    adj_list = {n: list(G.neighbors(n)) for n in G.nodes()}
+    
+    # Colorir com backtracking
+    cores_bt = backtracking_coloring(adj_list, len(colors))
+    if cores_bt:
+        plotar_exemplo_grafo(G, cores_bt, 
+                           'Exemplo de Coloração - Backtracking',
+                           os.path.join(pasta_resultados, 'exemplo_backtracking.png'))
+    
+    # Colorir com algoritmo guloso
+    cores_guloso = greedy_coloring(adj_list, colors)
+    plotar_exemplo_grafo(G, cores_guloso, 
+                        'Exemplo de Coloração - Algoritmo Guloso',
+                        os.path.join(pasta_resultados, 'exemplo_guloso.png'))
+    
+    # Gerar gráficos de desempenho
     vertices = [r[0] for r in resultados_backtracking]
     tempo_back = [r[1] for r in resultados_backtracking]
     mem_back = [r[2]/1024 for r in resultados_backtracking]
@@ -64,7 +115,7 @@ def salvar_resultados(resultados_backtracking, resultados_guloso):
     tempo_guloso = [r[1] for r in resultados_guloso]
     mem_guloso = [r[2]/1024 for r in resultados_guloso]
     
-    print("Salvando gráfico de tempo...")
+    print("Salvando gráficos de desempenho...")
     plotar_comparativo_tempo(
         vertices, 
         tempo_back, 
@@ -72,7 +123,6 @@ def salvar_resultados(resultados_backtracking, resultados_guloso):
         os.path.join(pasta_resultados, 'comparativo_tempo.png')
     )
     
-    print("Salvando gráfico de memória...")
     plotar_comparativo_memoria(
         vertices,
         mem_back,

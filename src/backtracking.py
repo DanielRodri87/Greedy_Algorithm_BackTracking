@@ -161,6 +161,6 @@ def executar_experimentos_bt():
     return resultados
 
 if __name__ == "__main__":
-    from src.results import salvar_resultados
+    from .results import salvar_resultados
     resultados_backtracking = executar_experimentos_bt()
     print("\n✅ Experimentos do algoritmo backtracking concluídos!")

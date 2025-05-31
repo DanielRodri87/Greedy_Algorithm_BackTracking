@@ -285,7 +285,7 @@ def executar_experimentos():
 
 
 if __name__ == "__main__":
-    from src.results import salvar_resultados
+    from .results import salvar_resultados
     import tracemalloc
     
     resultados_guloso = executar_experimentos()
