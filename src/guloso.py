@@ -192,66 +192,23 @@ def greedy_coloring(adjacency_list: dict, colors: list) -> list:
     return vertex_colors
 
 
-def plot_mst(mst: list, vertex_colors: list, num_vertices: int):
-    """
-    Plota a MST com vértices coloridos e arestas rotuladas com seus pesos.
-    
-    Args:
-        mst: Lista de arestas da MST.
-        vertex_colors: Lista de cores dos vértices.
-        num_vertices: Número de vértices no grafo.
-    """
-    G = nx.Graph()
-    G.add_nodes_from(range(num_vertices))
-    for u, v, w in mst:
-        G.add_edge(u, v, weight=w)
-    
-    plt.figure(figsize=(10, 8))
-    pos = nx.spring_layout(G)  # Layout para posicionar os vértices
-    nx.draw_networkx_nodes(G, pos, node_color=[vertex_colors[v] for v in G.nodes()], node_size=200)
-    nx.draw_networkx_edges(G, pos)
-    nx.draw_networkx_labels(G, pos)
-    edge_labels = nx.get_edge_attributes(G, 'weight')
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
-    plt.show()
+def greedy_coloring_by_degree(adjacency_list: dict, colors: list) -> list:
+    num_vertices = len(adjacency_list)
+    vertex_degrees = [(v, len(adjacency_list[v])) for v in range(num_vertices)]
+    sorted_vertices = [v for v, _ in sorted(vertex_degrees, key=lambda x: x[1], reverse=True)]
+    vertex_colors = [None] * num_vertices
+    for vertex in sorted_vertices:
+        used_colors = {vertex_colors[neighbor] for neighbor in adjacency_list[vertex] 
+                       if vertex_colors[neighbor] is not None}
+        for color in colors:
+            if color not in used_colors:
+                vertex_colors[vertex] = color
+                break
+    return vertex_colors
 
-# --- Função Principal ---
-def main():
-    """
-    Função principal que gera um grafo, calcula a MST, colore os vértices e plota a MST.
-    """
-    num_vertices = 200  # Número de vértices
-    density = 0.1  # Densidade de arestas extras
-
-    # Gera o grafo
-    graph = Graph()
-    
-    graph.generate_graph(num_vertices, density)
-
-    print(graph.get_edges())
-
-    # Calcula a MST
-    mst = kruskal(graph)
-
-    # Constrói a lista de adjacência da MST e colore os vértices
-    mst_adj_list = build_mst_adjacency_list(mst, num_vertices)
-    vertex_colors = greedy_coloring(mst_adj_list, colors)
-
-    # Exibe informações no console
-    print("Arestas da MST:")
-    for u, v, w in mst:
-        print(f"{u} - {v} : {w}")
-    print("\nColoração dos vértices da MST:")
-    for vertex, color in enumerate(vertex_colors):
-        print(f"Vértice {vertex}: {color}")
-
-    # Plota a MST
-    plot_mst(mst, vertex_colors, num_vertices)
-
-
-def executar_experimentos():
+def executar_guloso():
     """Executa experimentos do algoritmo guloso"""
-    tamanhos_grafos = [5, 8, 10, 12, 15]
+    tamanhos_grafos = [10, 15, 20, 25, 50]
     resultados = []
     
     print("\n🚀 Iniciando experimentos de coloração de grafos (Guloso)...")
@@ -283,9 +240,43 @@ def executar_experimentos():
     
     return resultados
 
+def executar_guloso_por_grau():
+    """Executa experimentos do algoritmo guloso"""
+    tamanhos_grafos = [10, 15, 20, 25, 50]
+    resultados = []
+    
+    print("\n🚀 Iniciando experimentos de coloração de grafos (Guloso)...")
+    print("| Vértices | Tempo (ms) | Memória (KB) |")
+    print("|----------|------------|--------------|")
+    
+    for num_vertices in tamanhos_grafos:
+        inicio_tempo = time.perf_counter()
+        tracemalloc.start()
+        
+        graph = Graph()
+        graph.generate_graph(num_vertices, 0.4)
+        
+        # CORREÇÃO: Usar o grafo original (não a MST)
+        adj_list = graph.get_adjacency_list()
+        # Remover pesos das arestas
+        adj_list_unweighted = {
+            v: [neighbor for neighbor, _ in neighbors] 
+            for v, neighbors in adj_list.items()
+        }
+        vertex_colors = greedy_coloring_by_degree(adj_list_unweighted, colors)
+        
+        memoria = tracemalloc.get_traced_memory()[1]
+        tracemalloc.stop()
+        tempo = (time.perf_counter() - inicio_tempo) * 1000
+        
+        resultados.append((num_vertices, tempo, memoria))
+        print(f"| {num_vertices:8d} | {tempo:9.2f} | {memoria/1024:11.2f} |")
+    
+    return resultados
+
 
 if __name__ == "__main__":
-    from .results import salvar_resultados
+    # from .results import salvar_resultados
     import tracemalloc
     
     resultados_guloso = executar_experimentos()

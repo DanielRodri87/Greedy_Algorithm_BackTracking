@@ -128,7 +128,7 @@ def plot_mst(mst: list, vertex_colors: list, num_vertices: int):
     plt.show()
 
 def executar_experimentos_bt():
-    tamanhos_grafos = [5, 8, 10, 12, 15]
+    tamanhos_grafos = [10, 15, 20, 25, 50]
     resultados = []
 
     print("\n🚀 Iniciando experimentos de coloração de grafos (Backtracking)...")

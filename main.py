@@ -1,5 +1,5 @@
 from src.backtracking import executar_experimentos_bt
-from src.guloso import executar_experimentos
+from src.guloso import executar_guloso, executar_guloso_por_grau    
 from src.results import salvar_resultados
 
 def main():
@@ -11,10 +11,12 @@ def main():
     resultados_backtracking = executar_experimentos_bt()
     
     # Executa experimentos com algoritmo guloso
-    resultados_guloso = executar_experimentos()
+    resultados_guloso = executar_guloso()
+
+    resultados_guloso2 = executar_guloso_por_grau()
     
     # Salva resultados comparativos
-    salvar_resultados(resultados_backtracking, resultados_guloso)
+    salvar_resultados(resultados_backtracking, resultados_guloso, resultados_guloso2)
     
     print("\n✨ Resultados comparativos gerados com sucesso!")
     print("📊 Verifique os gráficos na pasta 'results'")
